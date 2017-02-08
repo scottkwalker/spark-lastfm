@@ -1,27 +1,35 @@
 import org.apache.spark.{SparkConf, SparkContext}
 
-object SimpleApp {
+object MainApp {
 
   def main(args: Array[String]) {
     val sc = createContext
 
-    //wordCount(sc)
-    question1(sc)
+//    val runnable = new WordCount
+    val runnable = new Question1
+    runnable.run(sc)
 
     sc.stop()
   }
 
-  private def createContext = {
+  protected def createContext = {
     val numberOfCores = 2
     val conf = new SparkConf()
       .setAppName("spark-lastfm")
       .setMaster(s"local[$numberOfCores]")
     new SparkContext(conf)
   }
+}
 
-  private def loadData(filePath: String, sc: SparkContext) = sc.textFile(filePath)
+sealed trait Setup {
+  def run(sc: SparkContext): Unit
 
-  private def wordCount(sc: SparkContext): Unit = {
+  protected def loadData(filePath: String, sc: SparkContext) = sc.textFile(filePath)
+}
+
+final class WordCount extends Setup {
+
+  def run(sc: SparkContext): Unit = {
     val filePath = "README.md"
     val data = loadData(filePath, sc)
     // Split up into words.
@@ -34,8 +42,10 @@ object SimpleApp {
       case (word, count) => println(s"word: $word, count: $count")
     }
   }
+}
 
-  private def question1(sc: SparkContext): Unit = {
+final class Question1 extends Setup {
+  def run(sc: SparkContext): Unit = {
     case class User(id: String)
 
     val filePath = "userid-profile.tsv"
