@@ -1,16 +1,70 @@
 import org.apache.spark.{SparkConf, SparkContext}
 
-object MainApp {
+object Question1App extends Setup {
+
+  final case class User(id: String)
+
+  final case class RecentTrack(userId: String, timestamp: String, artistId: String, artistName: String, trackId: Option[String], trackName: String)
 
   def main(args: Array[String]) {
     val sc = createContext
 
-//    val runnable = new WordCount
-    val runnable = new Question1
-    runnable.run(sc)
+    //val users = parseUsers(sc)
+    def recentTracks = parseRecentTracks(sc)
+
+    def tracksPlayedByUser = recentTracks.groupBy(_.userId)
+
+    // TODO could this be turned into a for-comprehension
+    def countDistinctTracksForUsers = tracksPlayedByUser.map {
+      case (userId, tracks) => s"$userId\t${tracks.toSeq.distinct.size}"
+    }
+
+    countDistinctTracksForUsers.saveAsTextFile("question1.tsv")
 
     sc.stop()
   }
+
+  private def parseUsers(sc: SparkContext) = {
+    val userData = {
+      val filePath = "userid-profile.tsv"
+      loadData(filePath, sc)
+    }
+
+    userData.filter(_.startsWith("#id")).map { line =>
+      // This is inefficient as we only need the first value but we split the whole string.
+      val delimited = line.split("\t")
+      val id = delimited.head
+      User(id)
+    }
+  }
+
+  private def parseRecentTracks(sc: SparkContext) = {
+    val recentTrackData = {
+      val filePath = "userid-timestamp-artid-artname-traid-traname.tsv"
+      loadData(filePath, sc)
+    }
+
+    recentTrackData.map { line =>
+
+      def emptyStringToNone: String => Option[String] = {
+        case ""       => None
+        case nonEmpty => Some(nonEmpty)
+      }
+
+      // This assumes every value is present.
+      val delimited = line.split("\t")
+      val userId = delimited(0)
+      val timestamp = delimited(1)
+      val artistId = delimited(2)
+      val artistName = delimited(3)
+      val trackId = emptyStringToNone(delimited(4))
+      val trackName = delimited(5)
+      RecentTrack(userId, timestamp, artistId, artistName, trackId, trackName)
+    }
+  }
+}
+
+sealed trait Setup {
 
   protected def createContext = {
     val numberOfCores = 2
@@ -19,45 +73,6 @@ object MainApp {
       .setMaster(s"local[$numberOfCores]")
     new SparkContext(conf)
   }
-}
-
-sealed trait Setup {
-  def run(sc: SparkContext): Unit
 
   protected def loadData(filePath: String, sc: SparkContext) = sc.textFile(filePath)
-}
-
-final class WordCount extends Setup {
-
-  def run(sc: SparkContext): Unit = {
-    val filePath = "README.md"
-    val data = loadData(filePath, sc)
-    // Split up into words.
-    val words = data.flatMap(line => line.split(" "))
-    // Transform into word and count.
-    val counts = words.map(word => (word, 1)).reduceByKey { case (x, y) => x + y }
-    // Save the word count back out to a text file, causing evaluation.
-    //counts.saveAsTextFile(outputFile)
-    counts.foreach {
-      case (word, count) => println(s"word: $word, count: $count")
-    }
-  }
-}
-
-final class Question1 extends Setup {
-  def run(sc: SparkContext): Unit = {
-    case class User(id: String)
-
-    val filePath = "userid-profile.tsv"
-    val data = loadData(filePath, sc)
-
-    val users = data.map { line =>
-      val delimited = line.split("\t")
-      // This is inefficient as we only need the first value but we split the whole string.
-      val id = delimited.head
-      User(id)
-    }
-
-    users.foreach(user => println(s"user id: ${user.id}"))
-  }
 }
