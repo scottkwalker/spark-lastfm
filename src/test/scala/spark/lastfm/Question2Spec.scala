@@ -4,7 +4,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.{BeforeAndAfter, Matchers, WordSpec}
 import spark.lastfm.models.RecentTrack
 
-class Question1Spec extends WordSpec with Matchers with BeforeAndAfter {
+class Question2Spec extends WordSpec with Matchers with BeforeAndAfter {
 
   "transform" should {
 
@@ -21,17 +21,17 @@ class Question1Spec extends WordSpec with Matchers with BeforeAndAfter {
       val user1Track2 = user1Track1.copy(trackName = trackName2)
       val user2Track1 = RecentTrack(userId2, timestamp1, artistId1, artistName1, trackId1, trackName1)
       val recentTracks = Seq(
-        user1Track1, user1Track2, user1Track1, user1Track2, user1Track1, user1Track2,
-        user2Track1
+        user1Track2, user1Track2,
+        user1Track1, user1Track1, user1Track1, user2Track1
       )
 
       val stubbedContext = sc.parallelize[RecentTrack](recentTracks)
 
-      val result = Question1.transform(stubbedContext).collect()
+      val result = Question2.transform(stubbedContext)
 
       result should contain theSameElementsAs Array(
-        s"$userId1\t2",
-        s"$userId2\t1"
+        s"$artistName1\t$trackName1\t4",
+        s"$artistName1\t$trackName2\t2"
       )
     }
   }

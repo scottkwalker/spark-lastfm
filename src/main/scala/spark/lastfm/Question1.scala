@@ -1,17 +1,15 @@
 package spark.lastfm
 
-import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-
-final case class User(id: String)
-
-final case class RecentTrack(userId: String, timestamp: String, artistId: String, artistName: String, trackId: Option[String], trackName: String)
+import spark.lastfm.models.RecentTrack
 
 object Question1 extends Setup {
+
   override def run(): Unit = {
     val sc = createContext
 
     def recentTracks = parseRecentTracks(sc)
+
     val countDistinctTracksForUsers = transform(recentTracks)
     save(countDistinctTracksForUsers)
 
@@ -30,5 +28,5 @@ object Question1 extends Setup {
     }
   }
 
-  override protected def save(result: RDD[String]): Unit = result.saveAsTextFile("question1.tsv")
+  private def save(result: RDD[String]): Unit = result.saveAsTextFile("question1.tsv")
 }

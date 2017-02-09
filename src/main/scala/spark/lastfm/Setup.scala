@@ -1,13 +1,11 @@
 package spark.lastfm
 
-import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
+import spark.lastfm.models.RecentTrack
 
 trait Setup {
 
   def run(): Unit
-
-  protected def save(result: RDD[String]): Unit
 
   protected def createContext = {
     val numberOfCores = 2
