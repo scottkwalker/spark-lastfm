@@ -1,8 +1,13 @@
 package spark.lastfm
 
+import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
 trait Setup {
+
+  def run(): Unit
+
+  protected def save(result: RDD[String]): Unit
 
   protected def createContext = {
     val numberOfCores = 2
@@ -13,4 +18,29 @@ trait Setup {
   }
 
   protected def loadData(filePath: String, sc: SparkContext) = sc.textFile(filePath)
+
+  protected def parseRecentTracks(sc: SparkContext) = {
+    val recentTrackData = {
+      val filePath = "userid-timestamp-artid-artname-traid-traname.tsv"
+      loadData(filePath, sc)
+    }
+
+    recentTrackData.map { line =>
+
+      def emptyStringToNone: String => Option[String] = {
+        case ""       => None
+        case nonEmpty => Some(nonEmpty)
+      }
+
+      // This assumes every value is present.
+      val delimited = line.split("\t")
+      val userId = delimited(0)
+      val timestamp = delimited(1)
+      val artistId = delimited(2)
+      val artistName = delimited(3)
+      val trackId = emptyStringToNone(delimited(4))
+      val trackName = delimited(5)
+      RecentTrack(userId, timestamp, artistId, artistName, trackId, trackName)
+    }
+  }
 }
