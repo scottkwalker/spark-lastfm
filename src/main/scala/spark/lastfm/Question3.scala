@@ -5,6 +5,8 @@ import spark.lastfm.models.RecentTrack
 
 object Question3 extends LastFm {
 
+  final case class Session(userId: String, tracks: Iterable[RecentTrack])
+
   override def run(): Unit = {
     val sc = createContext
 
@@ -17,15 +19,24 @@ object Question3 extends LastFm {
   }
 
   def transform(recentTracks: RDD[RecentTrack], limit: Int) = {
-    tracksPlayedByUser(recentTracks).map(format)
+    tracksPlayedByUser(recentTracks).flatMap(splitIntoSessions).map(format)
 
-    // TODO filter not in session
+
     // TODO find longest sessions.
     // TODO use limit
   }
 
-  def format: PartialFunction[(String, Iterable[RecentTrack]), String] = {
+  def splitIntoSessions: PartialFunction[(String, Iterable[RecentTrack]), Iterable[Session]] = {
     case (userId, tracks) =>
+      val startOfSession = tracks.head.timestamp
+      val endOfSession = startOfSession.plusMinutes(20)
+      val (inSession, outsideSession) = tracks.span(_.timestamp.isBefore(endOfSession))
+      // TODO recurse passing outsideSession
+      Seq(Session(userId, inSession))
+  }
+
+  def format: PartialFunction[Session, String] = {
+    case Session(userId, tracks) =>
       val sessionFirst = tracks.head
       val sessionLast = tracks.last
       val startTimestamp = sessionFirst.timestamp

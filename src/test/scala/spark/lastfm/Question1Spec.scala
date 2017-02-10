@@ -9,8 +9,8 @@ class Question1Spec extends UnitSpec {
     "return user ids along with the number of distinct songs the user has played" in {
       withSparkContext { sc =>
         val recentTracks = Seq(
-          user1TrackStartOfSession, user1TrackInSession, user1TrackStartOfSession, user1TrackInSession, user1TrackStartOfSession, user1TrackInSession,
-          user2TrackStartOfSession
+          user1TrackStartOfSession1, user1TrackInsideSession1, user1TrackStartOfSession1, user1TrackInsideSession1, user1TrackStartOfSession1, user1TrackInsideSession1,
+          user2TrackStartOfSession1
         )
 
         val stubbedContext = sc.parallelize[RecentTrack](recentTracks)
@@ -28,7 +28,7 @@ class Question1Spec extends UnitSpec {
   "countDistinctTracksForUser" should {
 
     "return user id and the count of distinct tracks" in {
-      val recentTracks = Seq(user1TrackStartOfSession, user1TrackInSession, user1TrackStartOfSession, user1TrackInSession)
+      val recentTracks = Seq(user1TrackStartOfSession1, user1TrackInsideSession1, user1TrackStartOfSession1, user1TrackInsideSession1)
 
       val result = Question1.countDistinctTracksForUser((userId1, recentTracks))
 
