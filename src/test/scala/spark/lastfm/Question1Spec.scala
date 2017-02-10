@@ -10,7 +10,7 @@ class Question1Spec extends UnitSpec {
       withSparkContext { sc =>
         val recentTracks = Seq(
           user1TrackStartOfSession1, user1TrackInsideSession1, user1TrackStartOfSession1, user1TrackInsideSession1, user1TrackStartOfSession1, user1TrackInsideSession1,
-          user2TrackStartOfSession1
+          user2TrackStartOfSession3
         )
 
         val stubbedContext = sc.parallelize[RecentTrack](recentTracks)

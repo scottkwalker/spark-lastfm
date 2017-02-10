@@ -8,11 +8,10 @@ class Question2Spec extends UnitSpec {
 
     "return tracks that have the highest number of times played (with a limit)" in {
       withSparkContext { sc =>
-        val outsideLimit = user2TrackStartOfSession1.copy(trackName = "some-trackName3")
         val recentTracks = Seq(
           user1TrackInsideSession1, user1TrackInsideSession1,
-          user1TrackStartOfSession1, user1TrackStartOfSession1, user1TrackStartOfSession1, user2TrackStartOfSession1,
-          outsideLimit
+          user1TrackStartOfSession1, user1TrackStartOfSession1, user1TrackStartOfSession1, user2TrackStartOfSession3,
+          user3TrackStartOfSession4
         )
 
         val stubbedContext = sc.parallelize[RecentTrack](recentTracks)
@@ -20,8 +19,8 @@ class Question2Spec extends UnitSpec {
         val result = Question2.transform(stubbedContext, limit = 2)
 
         result should contain theSameElementsAs Array(
-          s"$artistName1\t$trackName1\t4",
-          s"$artistName1\t$trackName2\t2"
+          s"$artistName1\t$trackStartOfSession\t4",
+          s"$artistName1\t$trackInsideSession\t2"
         )
       }
     }

@@ -7,48 +7,70 @@ class Question3Spec extends UnitSpec {
 
   "transform" should {
 
-    "return the longest user sessions" in {
+    "return the longest user sessions (with a limit)" in {
       withSparkContext { sc =>
-        val recentTracks = Seq(
-          user1TrackStartOfSession1, user1TrackInsideSession1, user1TrackStartOfSession2,
-          user2TrackStartOfSession1
+        val recentTracks = List(
+          user1TrackStartOfSession1, user1TrackInsideSession1,
+          user1TrackStartOfSession2,
+          user2TrackStartOfSession3
         )
 
         val stubbedContext = sc.parallelize[RecentTrack](recentTracks)
 
-        val result = Question3.transform(stubbedContext, limit = 2).collect()
+        val result = Question3.transform(stubbedContext, limit = 2)
 
-        result should contain theSameElementsAs Array(
+        result should contain theSameElementsInOrderAs Array(
           // session:
           // userid, timestamp of first song in session, timestamp of last song in the session, and the list of songs played in the session (in order of play).
-          s"$userId1\t$timestampStartOfSession1\t$timestampInsideSession1\t[$artistName1->$trackName1,$artistName1->$trackName2]",
-          s"$userId2\t$timestampStartOfSession1\t$timestampStartOfSession1\t[$artistName1->$trackName1]"
+          s"$userId1\t$timestamp0Minutes\t$timestamp19Minutes\t[$artistName1->$trackStartOfSession,$artistName1->$trackInsideSession]",
+          s"$userId2\t$timestamp0Minutes\t$timestamp0Minutes\t[$artistName1->$trackStartOfSession]"
         )
       }
+    }
+  }
+
+  "takeOneSession" should {
+
+    "return a single track when only one track was played" in {
+      val recentTracks = List(user1TrackStartOfSession1)
+
+      val (inSession, remainder) = Question3.takeOneSession(recentTracks)
+
+      inSession shouldBe List(user1TrackStartOfSession1)
+      remainder shouldBe Nil
+    }
+
+    "return tracks that are each within 20 minutes of each other and the remainder" in {
+      val recentTracks = List(
+        user1TrackStartOfSession1, user1TrackInsideSession1,
+        user1TrackStartOfSession2
+      )
+
+      val (inSession, remainder) = Question3.takeOneSession(recentTracks)
+
+      inSession shouldBe List(user1TrackStartOfSession1, user1TrackInsideSession1)
+      remainder shouldBe List(user1TrackStartOfSession2)
     }
   }
 
   "splitIntoSessions" should {
 
     "return a sequence with a single session when a user has only played on track" in {
-      val recentTracks = Seq(user1TrackStartOfSession1)
+      val recentTracks = List(user1TrackStartOfSession1)
 
-      val result = Question3.splitIntoSessions((userId1, recentTracks))
+      val result = Question3.splitIntoSessions(userId1, recentTracks)
 
-      //List(Session(some-user1,List(RecentTrack(some-user1,2009-01-01T00:00,some-artistId1,some-artistName1,None,some-trackName1))))
-      //Session(some-user1,List(RecentTrack(some-user1,2009-01-01T00:00,some-artistId1,some-artistName1,None,some-trackName1)))
-
-      result shouldBe Iterable(Session(userId1, Seq(user1TrackStartOfSession1)))
+      result shouldBe List(Session(userId1, timestamp0Minutes, timestamp0Minutes, Seq(user1TrackStartOfSession1)))
     }
 
     "return multiple sessions when a user has played more than one song within a 20 minute sliding window" in {
-      val recentTracks = Seq(user1TrackStartOfSession1, user1TrackInsideSession1, user1TrackStartOfSession2, user1TrackInsideSession2)
+      val recentTracks = List(user1TrackStartOfSession1, user1TrackInsideSession1, user1TrackStartOfSession2, user1TrackInsideSession2)
 
-      val result = Question3.splitIntoSessions((userId1, recentTracks))
+      val result = Question3.splitIntoSessions(userId1, recentTracks)
 
-      result shouldBe Iterable(
-        Session(userId1, Seq(user1TrackStartOfSession1, user1TrackInsideSession1)),
-        Session(userId1, Seq(user1TrackStartOfSession2, user1TrackInsideSession2))
+      result shouldBe List(
+        Session(userId1, timestamp0Minutes, timestamp19Minutes, Seq(user1TrackStartOfSession1, user1TrackInsideSession1)),
+        Session(userId1, timestamp0Minutes, timestamp59Minutes, Seq(user1TrackStartOfSession2, user1TrackInsideSession2))
       )
     }
   }
@@ -56,11 +78,11 @@ class Question3Spec extends UnitSpec {
   "format" should {
 
     "return expected" in {
-      val recentTracks = Seq(user1TrackStartOfSession1, user1TrackInsideSession1)
+      val recentTracks = List(user1TrackStartOfSession1, user1TrackInsideSession1)
 
-      val result = Question3.format(Session(userId1, recentTracks))
+      val result = Question3.format(Session(userId1, timestamp0Minutes, timestamp19Minutes, recentTracks))
 
-      result shouldBe s"$userId1\t$timestampStartOfSession1\t$timestampInsideSession1\t[$artistName1->$trackName1,$artistName1->$trackName2]"
+      result shouldBe s"$userId1\t$timestamp0Minutes\t$timestamp19Minutes\t[$artistName1->$trackStartOfSession,$artistName1->$trackInsideSession]"
     }
   }
 }

@@ -12,6 +12,6 @@ scapegoatVersion := "1.3.0"
 
 scapegoatDisabledInspections := Seq("RedundantFinalModifierOnCaseClass")
 
-wartremoverErrors ++= Warts.allBut(Wart.NonUnitStatements, Wart.TraversableOps, Wart.Var)
+//wartremoverErrors ++= Warts.allBut(Wart.NonUnitStatements, Wart.TraversableOps, Wart.Var)
 
 wartremoverWarnings ++= Seq(Wart.TraversableOps, Wart.Var)
