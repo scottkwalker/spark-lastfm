@@ -1,3 +1,5 @@
 package spark.lastfm.models
 
-final case class RecentTrack(userId: String, timestamp: String, artistId: String, artistName: String, trackId: Option[String], trackName: String)
+import java.time.LocalDateTime
+
+final case class RecentTrack(userId: String, timestamp: LocalDateTime, artistId: String, artistName: String, trackId: Option[String], trackName: String)

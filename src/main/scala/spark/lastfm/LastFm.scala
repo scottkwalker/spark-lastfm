@@ -1,5 +1,8 @@
 package spark.lastfm
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 import spark.lastfm.models.RecentTrack
@@ -34,7 +37,7 @@ trait LastFm {
       // This assumes every value is present.
       val delimited = line.split("\t")
       val userId = delimited(0)
-      val timestamp = delimited(1)
+      val timestamp = LocalDateTime.parse(delimited(1), DateTimeFormatter.ISO_DATE_TIME)
       val artistId = delimited(2)
       val artistName = delimited(3)
       val trackId = emptyStringToNone(delimited(4))
