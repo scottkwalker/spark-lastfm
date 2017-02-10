@@ -3,7 +3,7 @@ package spark.lastfm
 import org.apache.spark.{SparkConf, SparkContext}
 import spark.lastfm.models.RecentTrack
 
-trait Setup {
+trait LastFm {
 
   def run(): Unit
 

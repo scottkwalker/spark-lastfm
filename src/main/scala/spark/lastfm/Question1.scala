@@ -3,7 +3,7 @@ package spark.lastfm
 import org.apache.spark.rdd.RDD
 import spark.lastfm.models.RecentTrack
 
-object Question1 extends Setup {
+object Question1 extends LastFm {
 
   override def run(): Unit = {
     val sc = createContext
