@@ -1,5 +1,6 @@
 package spark.lastfm
 
+import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 import spark.lastfm.models.RecentTrack
 
@@ -41,4 +42,6 @@ trait LastFm {
       RecentTrack(userId, timestamp, artistId, artistName, trackId, trackName)
     }
   }
+
+  protected def tracksPlayedByUser(recentTracks: RDD[RecentTrack]) = recentTracks.groupBy(_.userId)
 }
