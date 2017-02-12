@@ -20,8 +20,6 @@ object Question3 extends LastFm {
       save(countDistinctTracksForUsers, sc)
     }
 
-  def sortByTimestamp(tracks: List[RecentTrack]) = tracks.sortBy(_.timestamp)(Ordering.fromLessThan(_ isBefore _))
-
   def transform(recentTracks: RDD[RecentTrack], limit: Int) =
     tracksPlayedByUser(recentTracks)
       .flatMap { case (userId, tracks) => splitIntoSessions(userId, sortByTimestamp(tracks.toList)) }
@@ -29,19 +27,7 @@ object Question3 extends LastFm {
       .take(limit)
       .map(format)
 
-  def tracksInsideSession(tracks: List[RecentTrack]) = {
-
-    @tailrec
-    def tracksInFirstSession(endOfSession: LocalDateTime, tracks: List[RecentTrack], tracksInSession: List[RecentTrack]): (List[RecentTrack], List[RecentTrack]) =
-      tracks match {
-        case Nil                      => (tracksInSession, List.empty[RecentTrack]) // No more tracks.
-        case nextTrack :: laterTracks =>
-          if (nextTrack.timestamp.isAfter(endOfSession)) (tracksInSession, tracks) // The next track was not in the session.
-          else tracksInFirstSession(nextTrack.endOfSession, laterTracks, tracksInSession ++ List(nextTrack))
-      }
-
-    tracksInFirstSession(tracks.head.endOfSession, tracks.tail, tracksInSession = List(tracks.head))
-  }
+  def sortByTimestamp(tracks: List[RecentTrack]) = tracks.sortBy(_.timestamp)(Ordering.fromLessThan(_ isBefore _))
 
   def splitIntoSessions(userId: String, tracks: List[RecentTrack]) = {
 
@@ -56,6 +42,20 @@ object Question3 extends LastFm {
       }
 
     splitIntoSessions(tracks, sessions = List.empty[Session])
+  }
+
+  def tracksInsideSession(tracks: List[RecentTrack]) = {
+
+    @tailrec
+    def tracksInFirstSession(endOfSession: LocalDateTime, tracks: List[RecentTrack], tracksInSession: List[RecentTrack]): (List[RecentTrack], List[RecentTrack]) =
+      tracks match {
+        case Nil                      => (tracksInSession, List.empty[RecentTrack]) // No more tracks.
+        case nextTrack :: laterTracks =>
+          if (nextTrack.timestamp.isAfter(endOfSession)) (tracksInSession, tracks) // The next track was not in the session.
+          else tracksInFirstSession(nextTrack.endOfSession, laterTracks, tracksInSession ++ List(nextTrack))
+      }
+
+    tracksInFirstSession(tracks.head.endOfSession, tracks.tail, tracksInSession = List(tracks.head))
   }
 
   def format: PartialFunction[Session, String] = {

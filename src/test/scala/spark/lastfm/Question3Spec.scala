@@ -9,7 +9,7 @@ class Question3Spec extends UnitSpec {
     "return the longest user sessions (with a limit)" in {
       withSparkContext { sc =>
         val recentTracks = List(
-          user1TrackStartOfSession1, user1TrackInsideSession1,
+          user1TrackInsideSession1, user1TrackStartOfSession1, // Tracks in the wrong order to prove they get sorted.
           user1TrackStartOfSession2,
           user2TrackStartOfSession3
         )
@@ -25,6 +25,20 @@ class Question3Spec extends UnitSpec {
           s"$userId2\t$timestamp0Minutes\t$timestamp0Minutes\t[$artistName1->$trackStartOfSession]"
         )
       }
+    }
+  }
+
+  "sortByTimestamp" should {
+
+    "return sorted list" in {
+      val tracks = List(
+        user1TrackStartOfSession1,
+        user1TrackInsideSession1,
+        user1TrackStartOfSession2,
+        user1TrackInsideSession2
+      )
+
+      Question3.sortByTimestamp(tracks.reverse) shouldBe tracks
     }
   }
 
