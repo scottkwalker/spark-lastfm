@@ -11,39 +11,50 @@ trait LastFm {
 
   def run(): Unit
 
-  protected def createContext = {
-    val numberOfCores = 2
-    val conf = new SparkConf()
-      .setAppName("spark-lastfm")
-      .setMaster(s"local[$numberOfCores]")
-    new SparkContext(conf)
-  }
-
-  protected def loadData(filePath: String, sc: SparkContext) = sc.textFile(filePath)
-
-  protected def parseRecentTracks(sc: SparkContext) = {
-    val recentTrackData = {
-      val filePath = "userid-timestamp-artid-artname-traid-traname.tsv"
-      loadData(filePath, sc)
+  protected def withSparkContext(taskName: String)(body: SparkContext => Unit): Unit = {
+    val sc = {
+      val numberOfCores = 2
+      val conf = new SparkConf()
+        .setAppName(s"spark-lastfm-$taskName")
+        .setMaster(s"local[$numberOfCores]")
+      new SparkContext(conf)
     }
 
-    recentTrackData.map { line =>
+    try {
+      body(sc)
+    } finally {
+      sc.stop()
+    }
+  }
 
-      def emptyStringToNone: String => Option[String] = {
+  protected def parseRecentTracks(sc: SparkContext) = {
+
+    def readFromFile(sc: SparkContext) = {
+      val filePath = "userid-timestamp-artid-artname-traid-traname.tsv"
+      sc.textFile(filePath)
+    }
+
+    def parse(tabDelimitedTokens: String) = {
+
+      def optionalToken: String => Option[String] = {
         case ""       => None
         case nonEmpty => Some(nonEmpty)
       }
 
+      def toTimestamp(token: String) = LocalDateTime.parse(token, DateTimeFormatter.ISO_DATE_TIME)
+
       // This assumes every value is present.
-      val delimited = line.split("\t")
-      val userId = delimited(0)
-      val timestamp = LocalDateTime.parse(delimited(1), DateTimeFormatter.ISO_DATE_TIME)
-      val artistId = delimited(2)
-      val artistName = delimited(3)
-      val trackId = emptyStringToNone(delimited(4))
-      val trackName = delimited(5)
+      val tokens = tabDelimitedTokens.split("\t")
+      val userId = tokens(0)
+      val timestamp = toTimestamp(tokens(1))
+      val artistId = tokens(2)
+      val artistName = tokens(3)
+      val trackId = optionalToken(tokens(4))
+      val trackName = tokens(5)
       RecentTrack(userId, timestamp, artistId, artistName, trackId, trackName)
     }
+
+    readFromFile(sc).map(parse)
   }
 
   protected def tracksPlayedByUser(recentTracks: RDD[RecentTrack]) = recentTracks.groupBy(_.userId)

@@ -6,14 +6,14 @@ import spark.lastfm.models.RecentTrack
 object Question1 extends LastFm {
 
   override def run(): Unit = {
-    val sc = createContext
+    withSparkContext("question1") { sc =>
 
-    def recentTracks = parseRecentTracks(sc)
+      def recentTracks = parseRecentTracks(sc)
 
-    val countDistinctTracksForUsers = transform(recentTracks)
-    save(countDistinctTracksForUsers)
+      val countDistinctTracksForUsers = transform(recentTracks)
 
-    sc.stop()
+      save(countDistinctTracksForUsers)
+    }
   }
 
   def transform(recentTracks: RDD[RecentTrack]) =

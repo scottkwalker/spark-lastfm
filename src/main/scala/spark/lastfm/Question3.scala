@@ -11,14 +11,14 @@ import scala.annotation.tailrec
 object Question3 extends LastFm {
 
   override def run(): Unit = {
-    val sc = createContext
+    withSparkContext("question3") { sc =>
 
-    def recentTracks = parseRecentTracks(sc)
+      def recentTracks = parseRecentTracks(sc)
 
-    val countDistinctTracksForUsers = transform(recentTracks, limit = 10)
-    save(countDistinctTracksForUsers, sc)
+      val countDistinctTracksForUsers = transform(recentTracks, limit = 10)
 
-    sc.stop()
+      save(countDistinctTracksForUsers, sc)
+    }
   }
 
   def transform(recentTracks: RDD[RecentTrack], limit: Int) = {
