@@ -1,6 +1,6 @@
 package spark.lastfm
 
-import java.time.LocalDateTime
+import java.time.{Duration, LocalDateTime}
 
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
@@ -23,7 +23,7 @@ object Question3 extends LastFm {
   def transform(recentTracks: RDD[RecentTrack], limit: Int) =
     tracksPlayedByUser(recentTracks)
       .flatMap { case (userId, tracks) => splitIntoSessions(userId, sortByTimestamp(tracks.toList)) }
-      .sortBy(_.duration, ascending = false)
+      .sortBy[Duration](_.duration, ascending = false)
       .take(limit)
       .map(format)
 
