@@ -72,5 +72,5 @@ object Question3 extends LastFm {
       s"$userId\t$startTimestamp\t$endTimestamp\t$songsInLongestSession"
   }
 
-  private def save(result: Array[String], sc: SparkContext) = sc.parallelize[String](result).saveAsTextFile("question1.tsv")
+  private def save(result: Array[String], sc: SparkContext) = sc.parallelize[String](result).saveAsTextFile("question3.tsv")
 }
