@@ -16,12 +16,15 @@ object Question2 extends LastFm {
       save(mostPopularSongs, sc)
     }
 
+  implicit val orderingKeysAndCounts: Ordering[(String, BigInt)] = new Ordering[(String, BigInt)] {
+    override def compare(x: (String, BigInt), y: (String, BigInt)) = x._2.compare(y._2)
+  }
+
   def transform(recentTracks: RDD[RecentTrack], limit: Int): Array[String] =
     recentTracks
       .map(track => (s"${track.artistName}\t${track.trackName}", BigInt(1)))
       .reduceByKey(_ + _)
-      .sortBy[BigInt](_._2, ascending = false)
-      .take(limit)
+      .top(limit)
       .map(format)
 
   def format: PartialFunction[(String, BigInt), String] = {
