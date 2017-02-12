@@ -7,6 +7,12 @@ This is an exercise to learn about Apache Spark with Scala.
 
 It will process a large dataset provided by Last.fm
 
+= Usage =
+
+The code has unit tests that can be run using the command:
+
+`sbt test`
+
 = Alternative designs =
 
 This design uses Spark to operate on large data sets. Some alternatives to using Spark are:
