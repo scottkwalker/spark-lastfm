@@ -1,6 +1,6 @@
 package spark.lastfm
 
-import java.time.{Duration, LocalDateTime}
+import java.time.LocalDateTime
 
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
@@ -60,8 +60,8 @@ object Question3 extends LastFm {
 
   def format: PartialFunction[Session, String] = {
     case session: Session =>
-      val songsInLongestSession = session.tracks.map(track => s"${track.artistName}->${track.trackName}").mkString("[", ",", "]")
-      s"${session.userId}\t${session.firstSongTimestamp}\t${session.lastSongTimestamp}\t$songsInLongestSession"
+      val songs = session.tracks.map(track => s"${track.artistName}->${track.trackName}").mkString("[", ",", "]")
+      s"${session.userId}\t${session.firstSongTimestamp}\t${session.lastSongTimestamp}\t$songs"
   }
 
   private def save(result: Array[String], sc: SparkContext) = sc.parallelize[String](result).saveAsTextFile("question3.tsv")

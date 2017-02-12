@@ -17,11 +17,16 @@ object Question2 extends LastFm {
     }
 
   def transform(recentTracks: RDD[RecentTrack], limit: Int): Array[String] =
-    recentTracks.map(track => (s"${track.artistName}\t${track.trackName}", BigInt(1)))
+    recentTracks
+      .map(track => (s"${track.artistName}\t${track.trackName}", BigInt(1)))
       .reduceByKey(_ + _)
       .sortBy[BigInt](_._2, ascending = false)
       .take(limit)
-      .map { case (key, count) => s"$key\t$count" }
+      .map(format)
+
+  def format: PartialFunction[(String, BigInt), String] = {
+    case (key, count) => s"$key\t$count"
+  }
 
   private def save(result: Array[String], sc: SparkContext) = sc.parallelize[String](result).saveAsTextFile("question2.tsv")
 }

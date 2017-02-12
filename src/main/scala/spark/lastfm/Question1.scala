@@ -16,11 +16,18 @@ object Question1 extends LastFm {
     }
 
   def transform(recentTracks: RDD[RecentTrack]) =
-    tracksPlayedByUser(recentTracks).map(countDistinctTracksForUser)
+    tracksPlayedByUser(recentTracks)
+      .map(countDistinctTracksForUser)
+      .map(format)
 
-  def countDistinctTracksForUser: PartialFunction[(String, Iterable[RecentTrack]), String] = {
+  def countDistinctTracksForUser: PartialFunction[(String, Iterable[RecentTrack]), (String, Int)] = {
     case (userId, tracks) =>
       val numberOfDistinctTracks = tracks.toSeq.distinct.size
+      (userId, numberOfDistinctTracks)
+  }
+
+  def format: PartialFunction[(String, Int), String] = {
+    case (userId, numberOfDistinctTracks) =>
       s"$userId\t$numberOfDistinctTracks"
   }
 

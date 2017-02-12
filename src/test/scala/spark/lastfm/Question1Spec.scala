@@ -32,7 +32,14 @@ class Question1Spec extends UnitSpec {
 
       val result = Question1.countDistinctTracksForUser((userId1, recentTracks))
 
-      result shouldBe s"$userId1\t2"
+      result shouldBe (userId1,2)
+    }
+  }
+
+  "format" should {
+
+    "return the user id and count in tab separated" in {
+      Question1.format(userId1, 2) shouldBe s"$userId1\t2"
     }
   }
 }

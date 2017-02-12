@@ -25,4 +25,11 @@ class Question2Spec extends UnitSpec {
       }
     }
   }
+
+  "format" should {
+
+    "return the user id and count in tab separated" in {
+      Question2.format("some-key", 2) shouldBe "some-key\t2"
+    }
+  }
 }
