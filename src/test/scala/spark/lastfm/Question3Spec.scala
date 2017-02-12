@@ -70,7 +70,7 @@ class Question3Spec extends UnitSpec {
 
       result shouldBe List(
         Session(userId1, timestamp0Minutes, timestamp19Minutes, Seq(user1TrackStartOfSession1, user1TrackInsideSession1)),
-        Session(userId1, timestamp0Minutes, timestamp59Minutes, Seq(user1TrackStartOfSession2, user1TrackInsideSession2))
+        Session(userId1, timestamp40Minutes, timestamp59Minutes, Seq(user1TrackStartOfSession2, user1TrackInsideSession2))
       )
     }
   }
