@@ -6,7 +6,7 @@ import spark.lastfm.models.RecentTrack
 
 object Question2 extends LastFm {
 
-  override def run(): Unit = {
+  override def run(): Unit =
     withSparkContext("question2") { sc =>
 
       def recentTracks = parseRecentTracks(sc)
@@ -15,7 +15,6 @@ object Question2 extends LastFm {
 
       save(mostPopularSongs, sc)
     }
-  }
 
   def transform(recentTracks: RDD[RecentTrack], limit: Int): Array[String] =
     recentTracks.map(track => (s"${track.artistName}\t${track.trackName}", BigInt(1)))

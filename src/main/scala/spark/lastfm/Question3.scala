@@ -10,7 +10,7 @@ import scala.annotation.tailrec
 
 object Question3 extends LastFm {
 
-  override def run(): Unit = {
+  override def run(): Unit =
     withSparkContext("question3") { sc =>
 
       def recentTracks = parseRecentTracks(sc)
@@ -19,15 +19,15 @@ object Question3 extends LastFm {
 
       save(countDistinctTracksForUsers, sc)
     }
-  }
 
-  def transform(recentTracks: RDD[RecentTrack], limit: Int) = {
+  def sortByTimestamp(tracks: List[RecentTrack]) = tracks.sortBy(_.timestamp)(Ordering.fromLessThan(_ isBefore _))
+
+  def transform(recentTracks: RDD[RecentTrack], limit: Int) =
     tracksPlayedByUser(recentTracks)
-      .flatMap { case (userId, tracks) => splitIntoSessions(userId, tracks.toList) }
-      .sortBy(f => Duration.between(f.startTimestamp, f.endTimestamp), ascending = false)
+      .flatMap { case (userId, tracks) => splitIntoSessions(userId, sortByTimestamp(tracks.toList)) }
+      .sortBy(_.duration, ascending = false)
       .take(limit)
       .map(format)
-  }
 
   def tracksInsideSession(tracks: List[RecentTrack]) = {
 
@@ -46,13 +46,14 @@ object Question3 extends LastFm {
   def splitIntoSessions(userId: String, tracks: List[RecentTrack]) = {
 
     @tailrec
-    def splitIntoSessions(tracks: List[RecentTrack], sessions: List[Session]): List[Session] = tracks match {
-      case Nil => sessions
-      case _   =>
-        val (tracksInSession, tracksOutsideSession) = tracksInsideSession(tracks)
-        val session = Session(userId, tracksInSession)
-        splitIntoSessions(tracksOutsideSession, sessions ++ List(session))
-    }
+    def splitIntoSessions(tracks: List[RecentTrack], sessions: List[Session]): List[Session] =
+      tracks match {
+        case Nil => sessions
+        case _   =>
+          val (tracksInSession, tracksOutsideSession) = tracksInsideSession(tracks)
+          val session = Session(userId, tracksInSession)
+          splitIntoSessions(tracksOutsideSession, sessions ++ List(session))
+      }
 
     splitIntoSessions(tracks, sessions = List.empty[Session])
   }
@@ -60,7 +61,7 @@ object Question3 extends LastFm {
   def format: PartialFunction[Session, String] = {
     case session: Session =>
       val songsInLongestSession = session.tracks.map(track => s"${track.artistName}->${track.trackName}").mkString("[", ",", "]")
-      s"${session.userId}\t${session.startTimestamp}\t${session.endTimestamp}\t$songsInLongestSession"
+      s"${session.userId}\t${session.firstSongTimestamp}\t${session.lastSongTimestamp}\t$songsInLongestSession"
   }
 
   private def save(result: Array[String], sc: SparkContext) = sc.parallelize[String](result).saveAsTextFile("question3.tsv")

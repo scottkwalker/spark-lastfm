@@ -5,7 +5,7 @@ import spark.lastfm.models.RecentTrack
 
 object Question1 extends LastFm {
 
-  override def run(): Unit = {
+  override def run(): Unit =
     withSparkContext("question1") { sc =>
 
       def recentTracks = parseRecentTracks(sc)
@@ -14,7 +14,6 @@ object Question1 extends LastFm {
 
       save(countDistinctTracksForUsers)
     }
-  }
 
   def transform(recentTracks: RDD[RecentTrack]) =
     tracksPlayedByUser(recentTracks).map(countDistinctTracksForUser)
