@@ -28,12 +28,12 @@ class Question3Spec extends UnitSpec {
     }
   }
 
-  "takeOneSession" should {
+  "tracksInsideSession" should {
 
     "return a single track when only one track was played" in {
       val recentTracks = List(user1TrackStartOfSession1)
 
-      val (inSession, remainder) = Question3.takeOneSession(recentTracks)
+      val (inSession, remainder) = Question3.tracksInsideSession(recentTracks)
 
       inSession shouldBe List(user1TrackStartOfSession1)
       remainder shouldBe Nil
@@ -45,7 +45,7 @@ class Question3Spec extends UnitSpec {
         user1TrackStartOfSession2
       )
 
-      val (inSession, remainder) = Question3.takeOneSession(recentTracks)
+      val (inSession, remainder) = Question3.tracksInsideSession(recentTracks)
 
       inSession shouldBe List(user1TrackStartOfSession1, user1TrackInsideSession1)
       remainder shouldBe List(user1TrackStartOfSession2)
@@ -59,7 +59,7 @@ class Question3Spec extends UnitSpec {
 
       val result = Question3.splitIntoSessions(userId1, recentTracks)
 
-      result shouldBe List(Session(userId1, timestamp0Minutes, timestamp0Minutes, List(user1TrackStartOfSession1)))
+      result shouldBe List(Session(userId1, List(user1TrackStartOfSession1)))
     }
 
     "return multiple sessions when a user has played more than one song within a 20 minute sliding window" in {
@@ -68,8 +68,8 @@ class Question3Spec extends UnitSpec {
       val result = Question3.splitIntoSessions(userId1, recentTracks)
 
       result shouldBe List(
-        Session(userId1, timestamp0Minutes, timestamp19Minutes, List(user1TrackStartOfSession1, user1TrackInsideSession1)),
-        Session(userId1, timestamp40Minutes, timestamp59Minutes, List(user1TrackStartOfSession2, user1TrackInsideSession2))
+        Session(userId1, List(user1TrackStartOfSession1, user1TrackInsideSession1)),
+        Session(userId1, List(user1TrackStartOfSession2, user1TrackInsideSession2))
       )
     }
   }
@@ -78,7 +78,7 @@ class Question3Spec extends UnitSpec {
 
     "return expected" in {
       val recentTracks = List(user1TrackStartOfSession1, user1TrackInsideSession1)
-      val session = Session(userId1, timestamp0Minutes, timestamp19Minutes, recentTracks)
+      val session = Session(userId1, recentTracks)
 
       val result = Question3.format(session)
 

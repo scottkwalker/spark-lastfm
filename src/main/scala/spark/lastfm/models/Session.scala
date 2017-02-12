@@ -1,5 +1,6 @@
 package spark.lastfm.models
 
-import java.time.LocalDateTime
-
-final case class Session(userId: String, startTimestamp: LocalDateTime, endTimestamp: LocalDateTime, tracks: List[RecentTrack])
+final case class Session(userId: String, tracks: List[RecentTrack]) {
+  def startTimestamp = tracks.head.timestamp
+  def endTimestamp = tracks.last.timestamp
+}

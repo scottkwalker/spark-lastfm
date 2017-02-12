@@ -29,18 +29,18 @@ object Question3 extends LastFm {
       .map(format)
   }
 
-  def takeOneSession(tracks: List[RecentTrack]) = {
+  def tracksInsideSession(tracks: List[RecentTrack]) = {
 
     @tailrec
-    def takeOneSession(endOfSession: LocalDateTime, tracks: List[RecentTrack], tracksInSession: List[RecentTrack]): (List[RecentTrack], List[RecentTrack]) =
+    def tracksInFirstSession(endOfSession: LocalDateTime, tracks: List[RecentTrack], tracksInSession: List[RecentTrack]): (List[RecentTrack], List[RecentTrack]) =
       tracks match {
         case Nil                      => (tracksInSession, List.empty[RecentTrack]) // No more tracks.
         case nextTrack :: laterTracks =>
           if (nextTrack.timestamp.isAfter(endOfSession)) (tracksInSession, tracks) // The next track was not in the session.
-          else takeOneSession(nextTrack.endOfSession, laterTracks, tracksInSession ++ List(nextTrack))
+          else tracksInFirstSession(nextTrack.endOfSession, laterTracks, tracksInSession ++ List(nextTrack))
       }
 
-    takeOneSession(tracks.head.endOfSession, tracks.tail, tracksInSession = List(tracks.head))
+    tracksInFirstSession(tracks.head.endOfSession, tracks.tail, tracksInSession = List(tracks.head))
   }
 
   def splitIntoSessions(userId: String, tracks: List[RecentTrack]) = {
@@ -49,11 +49,8 @@ object Question3 extends LastFm {
     def splitIntoSessions(tracks: List[RecentTrack], sessions: List[Session]): List[Session] = tracks match {
       case Nil => sessions
       case _   =>
-        val (tracksInSession, tracksOutsideSession) = takeOneSession(tracks)
-
-        val startTimestamp = tracksInSession.head.timestamp
-        val endTimestamp = tracksInSession.last.timestamp
-        val session = Session(userId, startTimestamp, endTimestamp, tracksInSession)
+        val (tracksInSession, tracksOutsideSession) = tracksInsideSession(tracks)
+        val session = Session(userId, tracksInSession)
         splitIntoSessions(tracksOutsideSession, sessions ++ List(session))
     }
 
@@ -61,9 +58,9 @@ object Question3 extends LastFm {
   }
 
   def format: PartialFunction[Session, String] = {
-    case Session(userId, startTimestamp, endTimestamp, tracks) =>
-      val songsInLongestSession = tracks.map(track => s"${track.artistName}->${track.trackName}").mkString("[", ",", "]")
-      s"$userId\t$startTimestamp\t$endTimestamp\t$songsInLongestSession"
+    case session: Session =>
+      val songsInLongestSession = session.tracks.map(track => s"${track.artistName}->${track.trackName}").mkString("[", ",", "]")
+      s"${session.userId}\t${session.startTimestamp}\t${session.endTimestamp}\t$songsInLongestSession"
   }
 
   private def save(result: Array[String], sc: SparkContext) = sc.parallelize[String](result).saveAsTextFile("question3.tsv")
