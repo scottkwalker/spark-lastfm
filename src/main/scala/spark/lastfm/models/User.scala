@@ -1,3 +1,3 @@
 package spark.lastfm.models
 
-final case class User(id: String)
+case class User(id: String) extends AnyVal
