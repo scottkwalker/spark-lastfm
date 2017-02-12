@@ -12,6 +12,18 @@ scapegoatVersion := "1.3.0"
 
 scapegoatDisabledInspections := Seq("RedundantFinalModifierOnCaseClass")
 
-wartremoverErrors ++= Warts.allBut(Wart.NonUnitStatements, Wart.PublicInference, Wart.TraversableOps, Wart.Var)
+wartremoverErrors ++= Warts.allBut(Wart.NonUnitStatements, Wart.PublicInference, Wart.TraversableOps, Wart.Var,
+  ExtraWart.DateFormatPartial,
+  ExtraWart.EnumerationPartial,
+  ExtraWart.FutureObject,
+  ExtraWart.GenMapLikePartial,
+  ExtraWart.GenTraversableLikeOps,
+  ExtraWart.GenTraversableOnceOps,
+  ExtraWart.LegacyDateTimeCode,
+  ExtraWart.ScalaGlobalExecutionContext,
+  ExtraWart.StringOpsPartial,
+  ExtraWart.TraversableOnceOps,
+  ExtraWart.UntypedEquality
+)
 
 wartremoverWarnings ++= Seq(Wart.TraversableOps, Wart.Var)
