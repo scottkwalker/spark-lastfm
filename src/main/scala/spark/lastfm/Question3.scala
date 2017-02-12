@@ -1,16 +1,14 @@
 package spark.lastfm
 
-import java.time.{Duration, LocalDateTime}
+import java.time.Duration
 
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import spark.lastfm.models.RecentTrack
+import spark.lastfm.models.{RecentTrack, Session}
 
 import scala.annotation.tailrec
 
 object Question3 extends LastFm {
-
-  final case class Session(userId: String, startTimestamp: LocalDateTime, endTimestamp: LocalDateTime, tracks: Iterable[RecentTrack])
 
   override def run(): Unit = {
     val sc = createContext
@@ -36,12 +34,12 @@ object Question3 extends LastFm {
     @tailrec
     def takeOneSession(tracks: List[RecentTrack], accumulator: List[RecentTrack]): (List[RecentTrack], List[RecentTrack]) =
       tracks match {
-        case head :: Nil       => (accumulator, List.empty[RecentTrack])
+        case Nil | _ :: Nil       => (accumulator, List.empty[RecentTrack])
         case head :: remainder =>
           remainder.headOption match {
             case None       => (accumulator, List.empty[RecentTrack])
             case Some(next) =>
-              val endOfSession = head.timestamp.plusMinutes(20)
+              val endOfSession = head.endOfSession
               if (next.timestamp.isAfter(endOfSession)) (accumulator, remainder)
               else takeOneSession(remainder, accumulator ++ List(next))
           }
