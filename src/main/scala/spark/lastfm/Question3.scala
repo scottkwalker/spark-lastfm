@@ -1,6 +1,6 @@
 package spark.lastfm
 
-import java.time.Duration
+import java.time.{Duration, LocalDateTime}
 
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
@@ -32,36 +32,32 @@ object Question3 extends LastFm {
   def takeOneSession(tracks: List[RecentTrack]) = {
 
     @tailrec
-    def takeOneSession(tracks: List[RecentTrack], accumulator: List[RecentTrack]): (List[RecentTrack], List[RecentTrack]) =
+    def takeOneSession(endOfSession: LocalDateTime, tracks: List[RecentTrack], tracksInSession: List[RecentTrack]): (List[RecentTrack], List[RecentTrack]) =
       tracks match {
-        case Nil | _ :: Nil       => (accumulator, List.empty[RecentTrack])
-        case head :: remainder =>
-          remainder.headOption match {
-            case None       => (accumulator, List.empty[RecentTrack])
-            case Some(next) =>
-              val endOfSession = head.endOfSession
-              if (next.timestamp.isAfter(endOfSession)) (accumulator, remainder)
-              else takeOneSession(remainder, accumulator ++ List(next))
-          }
+        case Nil                      => (tracksInSession, List.empty[RecentTrack]) // No more tracks.
+        case nextTrack :: laterTracks =>
+          if (nextTrack.timestamp.isAfter(endOfSession)) (tracksInSession, tracks) // The next track was not in the session.
+          else takeOneSession(nextTrack.endOfSession, laterTracks, tracksInSession ++ List(nextTrack))
       }
 
-    takeOneSession(tracks, accumulator = List(tracks.head))
+    takeOneSession(tracks.head.endOfSession, tracks.tail, tracksInSession = List(tracks.head))
   }
 
   def splitIntoSessions(userId: String, tracks: List[RecentTrack]) = {
 
     @tailrec
-    def splitIntoSessions(tracks: List[RecentTrack], accumulator: List[Session]): List[Session] = tracks match {
-      case Nil => accumulator
+    def splitIntoSessions(tracks: List[RecentTrack], sessions: List[Session]): List[Session] = tracks match {
+      case Nil => sessions
       case _   =>
-        val (inSession, remainder) = takeOneSession(tracks)
-        val startTimestamp = inSession.head.timestamp
-        val endTimestamp = inSession.last.timestamp
-        val session = Session(userId, startTimestamp, endTimestamp, inSession)
-        splitIntoSessions(remainder, accumulator ++ List(session))
+        val (tracksInSession, tracksOutsideSession) = takeOneSession(tracks)
+
+        val startTimestamp = tracksInSession.head.timestamp
+        val endTimestamp = tracksInSession.last.timestamp
+        val session = Session(userId, startTimestamp, endTimestamp, tracksInSession)
+        splitIntoSessions(tracksOutsideSession, sessions ++ List(session))
     }
 
-    splitIntoSessions(tracks, accumulator = List.empty[Session])
+    splitIntoSessions(tracks, sessions = List.empty[Session])
   }
 
   def format: PartialFunction[Session, String] = {
