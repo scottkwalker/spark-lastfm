@@ -13,7 +13,7 @@ trait LastFm {
 
   protected def withSparkContext(taskName: String)(body: SparkContext => Unit): Unit = {
     val sc = {
-      val numberOfCores = 2
+      val numberOfCores = Runtime.getRuntime.availableProcessors()
       val conf = new SparkConf()
         .setAppName(s"spark-lastfm-$taskName")
         .setMaster(s"local[$numberOfCores]")
