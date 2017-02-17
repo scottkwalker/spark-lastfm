@@ -12,7 +12,16 @@ scapegoatVersion := "1.3.0"
 
 scapegoatDisabledInspections := Seq("RedundantFinalModifierOnCaseClass")
 
-wartremoverErrors ++= Warts.allBut(Wart.NonUnitStatements, Wart.PublicInference, Wart.TraversableOps, Wart.Var,
+wartremoverErrors ++= Warts.allBut(
+  Wart.NonUnitStatements, 
+  Wart.PublicInference, 
+  Wart.TraversableOps, 
+  Wart.Var
+)
+
+wartremoverWarnings ++= Seq(
+  Wart.TraversableOps, 
+  Wart.Var,
   ExtraWart.DateFormatPartial,
   ExtraWart.EnumerationPartial,
   ExtraWart.FutureObject,
@@ -25,5 +34,3 @@ wartremoverErrors ++= Warts.allBut(Wart.NonUnitStatements, Wart.PublicInference,
   ExtraWart.TraversableOnceOps,
   ExtraWart.UntypedEquality
 )
-
-wartremoverWarnings ++= Seq(Wart.TraversableOps, Wart.Var)
